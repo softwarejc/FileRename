@@ -61,7 +61,7 @@ namespace FileEditor
                     var lastWrite = file.LastWriteTime;
                     var folderDate = Utils.GetDefaultTimeFromFolder(file);
 
-                    if (lastWrite.Year != DateTime.Now.Year) // First fallback, old last write time.
+                    if (lastWrite.Year != DateTime.Now.Year) // First fallback, last write time not in this year
                     {
                         date = lastWrite;
                     }
@@ -71,8 +71,7 @@ namespace FileEditor
                     }
                     else
                     {
-                        Console.WriteLine("Unknown date: " + file.FullName);
-                        date = null;
+                        date = lastWrite; // Last fallback, last write time
                     }
                 }
 
