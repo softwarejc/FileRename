@@ -2,23 +2,22 @@
 using MetadataExtractor.Formats.Avi;
 using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.QuickTime;
-using RedCorners.ExifLibrary;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 
 namespace FileEditor
 {
-    public static class Utils
+    internal static class Utils
     {
-        public static readonly DateTime DefaultDate = default(DateTime); // default
+        internal static readonly DateTime DefaultDate = default(DateTime); // default
 
-        public static readonly string IMG_prefix = "PHOTO_";
-        public static readonly string VID_prefix = "VIDEO_";
+        internal static readonly string IMG_prefix = "PHOTO_";
+        internal static readonly string VID_prefix = "VIDEO_";
 
-        public static void Rename(FileInfo file, DateTime newNameDate, bool isVideo)
+        internal static string[] DatePatterns => _datePatterns;
+
+        internal static readonly string[] _mediaExtensions = { ".MOV", ".AVI", ".MP4", ".DIVX", ".WMV", ".LVIX" };
+
+        internal static void Rename(FileInfo file, DateTime newNameDate, bool isVideo)
         {
             string prefix = IMG_prefix;
             if (isVideo)
@@ -51,7 +50,7 @@ namespace FileEditor
             File.Move(file.FullName, newName);
         }
 
-        public static DateTime GetDefaultTimeFromFolder(FileInfo file)
+        internal static DateTime GetDefaultTimeFromFolder(FileInfo file)
         {
             // try to get default from folder name
             var folder = System.IO.Directory.GetParent(file.FullName).Name;
@@ -68,39 +67,6 @@ namespace FileEditor
             }
 
             return DefaultDate;
-        }
-
-        public static DateTime? GetDateFromTagsOnlyImages(FileInfo file, ImageFile imageFile)
-        {
-            DateTime result = GetDefaultTimeFromFolder(file);
-
-            // Find date from properties
-            if (imageFile.Properties.ContainsKey(ExifTag.DateTimeDigitized))
-            {
-                result = Convert.ToDateTime(imageFile.Properties[ExifTag.DateTimeDigitized].Value);
-            }
-            else if (imageFile.Properties.ContainsKey(ExifTag.DateTime))
-            {
-                result = Convert.ToDateTime(imageFile.Properties[ExifTag.DateTime].Value);
-            }
-
-            else if (imageFile.Properties.ContainsKey(ExifTag.GPSDateStamp))
-            {
-                result = Convert.ToDateTime(imageFile.Properties[ExifTag.GPSDateStamp].Value);
-            }
-
-            //// If property does not exist, add it
-            //if (!imageFile.Properties.ContainsKey(ExifTag.DateTimeOriginal))
-            //{
-            //    ExifProperty prop = new ExifDateTime(ExifTag.DateTimeOriginal, result);
-            //    imageFile.Properties.Add(prop);
-            //}
-
-            // Set creation date property
-            //imageFile.Properties.Set(ExifTag.DateTimeOriginal, new ExifDateTime(ExifTag.DateTimeOriginal, result));
-            //imageFile.Save(file.FullName);
-
-            return result;
         }
 
         internal static DateTime GetDateFromTags(FileInfo file)
@@ -132,7 +98,7 @@ namespace FileEditor
                     // Print all metadata
                     foreach (var tag in pngDirectory.Tags)
                     {
-                        Console.WriteLine($"{pngDirectory.Name} - {tag.Name} = {tag.Description}");
+                        // Console.WriteLine($"{pngDirectory.Name} - {tag.Name} = {tag.Description}");
                         if (tag.Description.Contains("Creation Time: "))
                         {
                             result = ParseDateTime(tag.Description.Replace("Creation Time: ", ""));
@@ -203,8 +169,13 @@ namespace FileEditor
             return result;
         }
 
-        private static readonly string[] _datePatterns =
-     {
+        internal static bool IsVideoFile(string path)
+        {
+            return -1 != Array.IndexOf(_mediaExtensions, Path.GetExtension(path).ToUpperInvariant());
+        }
+
+        internal static readonly string[] _datePatterns =
+        {
             "yyyy:MM:dd HH:mm:ss",
             "MMM dd HH:mm:ss yyyy",
             "MMM d HH:mm:ss yyyy",
@@ -239,7 +210,6 @@ namespace FileEditor
             "yyyy"
         };
 
-        public static string[] DatePatterns => _datePatterns;
 
         private static DateTime ParseDateTime(string dateText)
         {

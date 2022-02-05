@@ -1,5 +1,4 @@
-﻿using RedCorners.ExifLibrary;
-
+﻿
 namespace FileEditor
 {
     // docker build -t filerename .
@@ -13,10 +12,10 @@ namespace FileEditor
             DirectoryInfo d = new DirectoryInfo(args[0]);
 
             Console.WriteLine(Directory.GetCurrentDirectory());
-            Console.WriteLine("Path - " + d.FullName);
+            Console.WriteLine("Root path: " + d.FullName);
 
-            var files = d.GetFiles("*", SearchOption.AllDirectories)
-                .Where(f => !f.FullName.Contains("@") && 
+            var files = d.GetFiles("*", SearchOption.AllDirectories).Where(f =>
+                !f.FullName.Contains("@") &&
                 !f.FullName.Contains(Utils.VID_prefix) &&
                 !f.FullName.Contains(Utils.IMG_prefix));
 
@@ -25,12 +24,12 @@ namespace FileEditor
             int cont = 0;
             foreach (FileInfo file in files)
             {
-                cont++;
-
                 if (cont % 100 == 0)
                 {
                     Console.WriteLine("- " + (files.Count() - cont) + " files left");
                 }
+
+                cont++;
 
                 Process(file);
             }
@@ -46,24 +45,13 @@ namespace FileEditor
             try
             {
                 DateTime? date = null;
-                var isVideo = IsVideoFile(file.FullName);
+                var isVideo = Utils.IsVideoFile(file.FullName);
 
                 try
                 {
                     date = Utils.GetDateFromTags(file);
                 }
-                catch (Exception)
-                {
-                    try
-                    {
-                        // 2nd method
-                        var imageFile = ImageFile.FromFile(file.FullName);
-                        date = Utils.GetDateFromTagsOnlyImages(file, imageFile);
-                    }
-                    catch (Exception)
-                    {
-                    }
-                }
+                catch (Exception) { }
 
                 if (!date.HasValue || date.Value.Equals(Utils.DefaultDate))
                 {
@@ -71,19 +59,17 @@ namespace FileEditor
                     var lastWrite = file.LastWriteTime;
                     var folderDate = Utils.GetDefaultTimeFromFolder(file);
 
-                    if (lastWrite.Year != DateTime.Now.Year)
+                    if (lastWrite.Year != DateTime.Now.Year) // First fallback, old last write time.
                     {
                         date = lastWrite;
                     }
-                    else if (folderDate.Year != 1)
+                    else if (folderDate.Year != 1) // Second fallback, folder with a 4 digits name = year
                     {
                         date = folderDate;
                     }
                     else
                     {
-                        Console.WriteLine();
-                        Console.WriteLine("Warning. " + file.FullName);
-                        Console.WriteLine();
+                        Console.WriteLine("Unknown date: " + file.FullName);
                         date = null;
                     }
                 }
@@ -92,17 +78,8 @@ namespace FileEditor
             }
             catch (Exception e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(e.Message);
-                Console.ForegroundColor = ConsoleColor.White;
             }
-        }
-
-        static readonly string[] _mediaExtensions = { ".MOV", ".AVI", ".MP4", ".DIVX", ".WMV", ".LVIX" };
-
-        static bool IsVideoFile(string path)
-        {
-            return -1 != Array.IndexOf(_mediaExtensions, Path.GetExtension(path).ToUpperInvariant());
         }
     }
 }

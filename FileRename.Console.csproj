@@ -11,6 +11,5 @@
   <ItemGroup>
     <PackageReference Include="MetadataExtractor" Version="2.7.1" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
-    <PackageReference Include="RedCorners.ExifLibrary" Version="2.0.0" />
   </ItemGroup>
 </Project>
