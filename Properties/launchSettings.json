@@ -2,7 +2,9 @@
   "profiles": {
     "DefaultProfile": {
       "commandName": "Project",
-      "commandLineArgs": "\"\\\\JKNAS\\photo\\test\""
+      "environmentVariables": {
+        "PHOTOS_PATH": "\\\\JKNAS\\photo\\test"
+      }
     },
     "Docker": {
       "commandName": "Docker"

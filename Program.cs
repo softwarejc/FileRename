@@ -9,15 +9,17 @@ namespace FileEditor
         {
             Console.ForegroundColor = ConsoleColor.White;
 
-            DirectoryInfo d = new DirectoryInfo(args[0]);
+            //DirectoryInfo d = new DirectoryInfo(args[0]);
 
-            Console.WriteLine(Directory.GetCurrentDirectory());
-            Console.WriteLine("Root path: " + d.FullName);
+            var path = Environment.GetEnvironmentVariable("PHOTOS_PATH");
+            Console.WriteLine("Root path: " + path);
+            DirectoryInfo d = new DirectoryInfo(path);
 
-            var files = d.GetFiles("*", SearchOption.AllDirectories).Where(f =>
-                !f.FullName.Contains("@") &&
-                !f.FullName.Contains(Utils.VID_prefix) &&
-                !f.FullName.Contains(Utils.IMG_prefix));
+            var files = d.GetFiles("*", SearchOption.AllDirectories); 
+            //.Where(f =>
+            //    !f.FullName.Contains("@") &&
+            //    !f.FullName.Contains(Utils.VID_prefix) &&
+            //    !f.FullName.Contains(Utils.IMG_prefix));
 
             Console.WriteLine(files.Count() + " files found.");
 
@@ -37,7 +39,7 @@ namespace FileEditor
 
         private static void Process(FileInfo file)
         {
-            if (file.Name.Contains(Utils.VID_prefix) || file.Name.StartsWith(Utils.IMG_prefix))
+            if (file.Name.Contains(Utils.VID_prefix) || file.Name.StartsWith(Utils.IMG_prefix) || file.FullName.Contains("@"))
             {
                 return;
             }
