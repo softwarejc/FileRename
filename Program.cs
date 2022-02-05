@@ -15,27 +15,29 @@ namespace FileEditor
                 throw new InvalidOperationException("Invalid path.");
             }
 
-            // Get files that were not renamed yet
-            var files = new DirectoryInfo(path).GetFiles("*", SearchOption.AllDirectories).Where(f =>
-                !f.Name.Contains(Utils.VID_prefix) &&
-                !f.Name.Contains(Utils.IMG_prefix));
+            // Get directories and filter the internal Synology dirs (@eaDir)
+            var root = new DirectoryInfo(path);
+            var directories = new[] { root }.Concat(root.GetDirectories("*", SearchOption.AllDirectories).Where(directory => !directory.Name.Contains("@")));
 
-            // Filter files that are not images
-            files = files.Where(f => f.FullName.Contains("@") || Utils.ExtensionsToSkip.Contains(f.Extension.ToUpper()));
-
-            Console.WriteLine(files.Count() + " files found.");
-
-            int cont = 0;
-            foreach (FileInfo file in files)
+            foreach (var d in directories)
             {
-                // Give some feedback
-                if (cont % 100 == 0)
-                {
-                    Console.WriteLine("- " + (files.Count() - cont) + " files left");
-                }
-                cont++;
+                IEnumerable<FileInfo> files = new DirectoryInfo(d.FullName).GetFiles("*");
 
-                Process(file);
+                files = files.Where(f => 
+                    !f.Name.Contains(Utils.VID_prefix) && // videos
+                    !f.Name.Contains(Utils.IMG_prefix)); // images
+
+                files = files.Where(file => !Utils.ExtensionsToSkip.Any(e => e.Equals(file.Extension.ToUpper())));
+
+                if (files.Count() > 0)
+                {
+                    Console.WriteLine(files.Count() + " | " + d.FullName);
+
+                    foreach (FileInfo file in files)
+                    {
+                        Process(file);
+                    }
+                }
             }
         }
 
