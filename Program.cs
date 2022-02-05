@@ -23,8 +23,8 @@ namespace FileEditor
                 IEnumerable<FileInfo> files = new DirectoryInfo(d.FullName).GetFiles("*");
 
                 files = files.Where(f =>
-                    !f.Name.Contains(Utils.VID_prefix) && // videos
-                    !f.Name.Contains(Utils.IMG_prefix)); // images
+                    !f.Name.Contains(Utils.VID_prefix) && // exclude renamed videos 
+                    !f.Name.Contains(Utils.IMG_prefix)); // exlude renamed images
 
                 files = files.Where(file => !Utils.ExtensionsToSkip.Any(e => e.Equals(file.Extension.ToUpper()))); // exclude some extensions
                 files = files.Where(file => !string.IsNullOrEmpty(file.Extension.ToUpper())); // exclude files without extension
