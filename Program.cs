@@ -15,23 +15,24 @@ namespace FileEditor
                 throw new InvalidOperationException("Invalid path.");
             }
 
-            // Get directories and filter the internal Synology dirs (@eaDir)
             var root = new DirectoryInfo(path);
-            var directories = new[] { root }.Concat(root.GetDirectories("*", SearchOption.AllDirectories).Where(directory => !directory.Name.Contains("@")));
+            var directories = new[] { root }.Concat(root.GetDirectories("*", SearchOption.AllDirectories));
 
             foreach (var d in directories)
             {
                 IEnumerable<FileInfo> files = new DirectoryInfo(d.FullName).GetFiles("*");
 
-                files = files.Where(f => 
+                files = files.Where(f =>
                     !f.Name.Contains(Utils.VID_prefix) && // videos
                     !f.Name.Contains(Utils.IMG_prefix)); // images
 
-                files = files.Where(file => !Utils.ExtensionsToSkip.Any(e => e.Equals(file.Extension.ToUpper())));
+                files = files.Where(file => !Utils.ExtensionsToSkip.Any(e => e.Equals(file.Extension.ToUpper()))); // exclude some extensions
+                files = files.Where(file => !string.IsNullOrEmpty(file.Extension.ToUpper())); // exclude files without extension
+                files = files.Where(file => !file.FullName.Contains("@eaDir")); // exclude Synology internal files (@eaDir)
 
                 if (files.Count() > 0)
                 {
-                    Console.WriteLine(files.Count() + " | " + d.FullName);
+                    Console.WriteLine(files.Count() + " file (s) | " + d.FullName);
 
                     foreach (FileInfo file in files)
                     {
