@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "DefaultProfile": {
+      "commandName": "Project",
+      "commandLineArgs": "\"\\\\JKNAS\\photo\\test\""
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}
