@@ -15,7 +15,9 @@ namespace FileEditor
 
         internal static string[] DatePatterns => _datePatterns;
 
-        internal static readonly string[] _mediaExtensions = { ".MOV", ".AVI", ".MP4", ".DIVX", ".WMV", ".LVIX" };
+        internal static readonly string[] ExtensionsToSkip = { ".INI", ".DB", ".EXE" };
+
+        internal static readonly string[] MediaExtensions = { ".MOV", ".AVI", ".MP4", ".DIVX", ".WMV", ".LVIX" };
 
         internal static void Rename(FileInfo file, DateTime newNameDate, bool isVideo)
         {
@@ -171,7 +173,7 @@ namespace FileEditor
 
         internal static bool IsVideoFile(string path)
         {
-            return -1 != Array.IndexOf(_mediaExtensions, Path.GetExtension(path).ToUpperInvariant());
+            return -1 != Array.IndexOf(MediaExtensions, Path.GetExtension(path).ToUpperInvariant());
         }
 
         internal static readonly string[] _datePatterns =

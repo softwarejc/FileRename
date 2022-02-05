@@ -5,32 +5,34 @@ namespace FileEditor
     // docker run filerename
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
-            Console.ForegroundColor = ConsoleColor.White;
-
-            //DirectoryInfo d = new DirectoryInfo(args[0]);
-
             var path = Environment.GetEnvironmentVariable("PHOTOS_PATH");
             Console.WriteLine("Root path: " + path);
-            DirectoryInfo d = new DirectoryInfo(path);
 
-            var files = d.GetFiles("*", SearchOption.AllDirectories); 
-            //.Where(f =>
-            //    !f.FullName.Contains("@") &&
-            //    !f.FullName.Contains(Utils.VID_prefix) &&
-            //    !f.FullName.Contains(Utils.IMG_prefix));
+            if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
+            {
+                throw new InvalidOperationException("Invalid path.");
+            }
+
+            // Get files that were not renamed yet
+            var files = new DirectoryInfo(path).GetFiles("*", SearchOption.AllDirectories).Where(f =>
+                !f.Name.Contains(Utils.VID_prefix) &&
+                !f.Name.Contains(Utils.IMG_prefix));
+
+            // Filter files that are not images
+            files = files.Where(f => f.FullName.Contains("@") || Utils.ExtensionsToSkip.Contains(f.Extension.ToUpper()));
 
             Console.WriteLine(files.Count() + " files found.");
 
             int cont = 0;
             foreach (FileInfo file in files)
             {
+                // Give some feedback
                 if (cont % 100 == 0)
                 {
                     Console.WriteLine("- " + (files.Count() - cont) + " files left");
                 }
-
                 cont++;
 
                 Process(file);
@@ -39,11 +41,6 @@ namespace FileEditor
 
         private static void Process(FileInfo file)
         {
-            if (file.Name.Contains(Utils.VID_prefix) || file.Name.StartsWith(Utils.IMG_prefix) || file.FullName.Contains("@"))
-            {
-                return;
-            }
-
             try
             {
                 DateTime? date = null;
