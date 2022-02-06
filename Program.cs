@@ -18,6 +18,7 @@ namespace FileEditor
             var root = new DirectoryInfo(path);
             var directories = new[] { root }.Concat(root.GetDirectories("*", SearchOption.AllDirectories));
 
+            int filesRenamed = 0;
             foreach (var d in directories)
             {
                 IEnumerable<FileInfo> files = new DirectoryInfo(d.FullName).GetFiles("*");
@@ -37,9 +38,13 @@ namespace FileEditor
                     foreach (FileInfo file in files)
                     {
                         Process(file);
+                        filesRenamed++;
                     }
                 }
             }
+
+            Console.WriteLine(filesRenamed +  " files renamed.");
+            Environment.Exit(0);
         }
 
         private static void Process(FileInfo file)
