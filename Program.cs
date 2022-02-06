@@ -61,25 +61,7 @@ namespace FileEditor
 
                 if (!date.HasValue || date.Value.Equals(default(DateTime)))
                 {
-                    // Fallback to lastWrite time
-                    var lastWrite = file.LastWriteTime;
-
-                    if (lastWrite.Year != DateTime.Now.Year) // First fallback, last write time not in this year
-                    {
-                        date = lastWrite;
-                    }
-                    else
-                    {
-                        var folderDate = Utils.GetDefaultTimeFromFolder(file);
-                        if (folderDate.Year != 1) // Second fallback, folder with a 4 digits name = year
-                        {
-                            date = folderDate;
-                        }
-                        else
-                        {
-                            date = lastWrite; // Last fallback, last write time
-                        }
-                    }
+                    date = Utils.GetDateWithoutTags(file);
                 }
 
                 if (date.HasValue) Utils.Rename(file, date.Value);

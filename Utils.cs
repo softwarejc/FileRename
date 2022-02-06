@@ -146,6 +146,32 @@ namespace FileEditor
             return result;
         }
 
+        internal static DateTime? GetDateWithoutTags(FileInfo file)
+        {
+            DateTime? date = null;
+            // Fallback to lastWrite time
+            var lastWrite = file.LastWriteTime;
+
+            if (lastWrite.Year != DateTime.Now.Year) // First fallback, last write time not in this year
+            {
+                date = lastWrite;
+            }
+            else
+            {
+                var folderDate = Utils.GetDefaultTimeFromFolder(file);
+                if (folderDate.Year != 1) // Second fallback, folder with a 4 digits name = year
+                {
+                    date = folderDate;
+                }
+                else
+                {
+                    date = lastWrite; // Last fallback, last write time
+                }
+            }
+
+            return date;
+        }
+
         private static bool IsVideoFile(string path)
         {
             return -1 != Array.IndexOf(MediaExtensions, Path.GetExtension(path).ToUpperInvariant());
