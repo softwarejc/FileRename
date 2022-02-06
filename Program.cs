@@ -15,6 +15,15 @@ namespace FileEditor
                 throw new InvalidOperationException("Invalid path.");
             }
 
+            while (true)
+            {
+                Run(path);
+                Thread.Sleep(TimeSpan.FromHours(24));
+            }
+        }
+
+        private static void Run(string path)
+        {
             var root = new DirectoryInfo(path);
             var directories = new[] { root }.Concat(root.GetDirectories("*", SearchOption.AllDirectories));
 
@@ -44,7 +53,6 @@ namespace FileEditor
             }
 
             Console.WriteLine(filesRenamed + " files renamed.");
-            Environment.Exit(0);
         }
 
         private static void Process(FileInfo file)
