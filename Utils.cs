@@ -8,32 +8,15 @@ namespace FileEditor
 {
     internal static class Utils
     {
-        internal static readonly DateTime DefaultDate = default(DateTime); // default
-
+        internal static string[] DatePatterns => datePatterns;
         internal static readonly string IMG_prefix = "PHOTO_";
         internal static readonly string VID_prefix = "VIDEO_";
-
-        internal static string[] DatePatterns => _datePatterns;
-
         internal static readonly string[] ExtensionsToSkip = { ".INI", ".DB", ".EXE" };
-
         internal static readonly string[] MediaExtensions = { ".MOV", ".AVI", ".MP4", ".DIVX", ".WMV", ".LVIX" };
-
-        internal static void Rename(FileInfo file, DateTime newNameDate, bool isVideo)
+        internal static void Rename(FileInfo file, DateTime newNameDate)
         {
-            string prefix = IMG_prefix;
-            if (isVideo)
-            {
-                prefix = VID_prefix;
-            }
-
+            var prefix = IsVideoFile(file.FullName) ? VID_prefix : IMG_prefix;
             var datePart = newNameDate.ToString("yyyyMMdd_HHmmss_");
-            if (newNameDate.Year < 1986)
-            {
-                datePart = "00000000_000000_";
-            }
-
-
             var newName = Path.Combine(file.Directory.FullName, prefix + datePart + file.Length + file.Extension.ToLower());
 
             if (file.FullName == newName)
@@ -54,33 +37,25 @@ namespace FileEditor
 
         internal static DateTime GetDefaultTimeFromFolder(FileInfo file)
         {
-            // try to get default from folder name
-            var folder = System.IO.Directory.GetParent(file.FullName).Name;
-            int folderYear;
-            if (int.TryParse(folder, out folderYear))
+            var parentFolder = System.IO.Directory.GetParent(file.FullName);
+            while (parentFolder!=null)
             {
-                return new DateTime(folderYear, 1, 1);
-            }
+                var folderName = parentFolder.Name;
+                int folderYear;
+                if (int.TryParse(folderName, out folderYear))
+                {
+                    return new DateTime(folderYear, 1, 1);
+                }
 
-            folder = System.IO.Directory.GetParent(file.FullName).Parent.Name;
-            if (int.TryParse(folder, out folderYear))
-            {
-                return new DateTime(folderYear, 1, 1);
+                parentFolder = parentFolder.Parent;
             }
-
-            return DefaultDate;
+            
+            return default(DateTime);
         }
 
         internal static DateTime GetDateFromTags(FileInfo file)
         {
-            DateTime result = DefaultDate;
-
-            // Print all metadata
-            //var metadataList = ImageMetadataReader.ReadMetadata(file.FullName);
-            //foreach (var metadataGroup in metadataList)
-            //    foreach (var tag in metadataGroup.Tags)
-            //        Console.WriteLine($"{metadataGroup.Name} - {tag.Name} = {tag.Description}");
-
+            DateTime result = default(DateTime);
             var tags = ImageMetadataReader.ReadMetadata(file.FullName);
 
             // Generic Exif
@@ -105,7 +80,7 @@ namespace FileEditor
                         {
                             result = ParseDateTime(tag.Description.Replace("Creation Time: ", ""));
 
-                            if (result != DefaultDate)
+                            if (result != default(DateTime))
                             {
                                 found = true;
                             }
@@ -171,12 +146,36 @@ namespace FileEditor
             return result;
         }
 
-        internal static bool IsVideoFile(string path)
+        private static bool IsVideoFile(string path)
         {
             return -1 != Array.IndexOf(MediaExtensions, Path.GetExtension(path).ToUpperInvariant());
         }
+        
+        private static DateTime ParseDateTime(string dateText)
+        {
+            if (string.IsNullOrEmpty(dateText))
+            {
+                return default(DateTime);
+            }
 
-        internal static readonly string[] _datePatterns =
+            List<CultureInfo> cultures = new List<CultureInfo> { CultureInfo.GetCultureInfo("en-US"), CultureInfo.GetCultureInfo("es-ES") };
+
+            foreach (var culture in cultures)
+            {
+                DateTime date;
+                foreach (var pattern in DatePatterns)
+                {
+                    if (DateTime.TryParseExact(dateText, pattern, culture, DateTimeStyles.AllowWhiteSpaces, out date))
+                    {
+                        return date;
+                    }
+                }
+            }
+
+            return default(DateTime);
+        }
+
+        private static readonly string[] datePatterns =
         {
             "yyyy:MM:dd HH:mm:ss",
             "MMM dd HH:mm:ss yyyy",
@@ -211,36 +210,6 @@ namespace FileEditor
             "yyyyMMdd", // as used in IPTC data
             "yyyy"
         };
-
-
-        private static DateTime ParseDateTime(string dateText)
-        {
-            if (string.IsNullOrEmpty(dateText))
-            {
-                return DefaultDate;
-            }
-
-            List<CultureInfo> cultures = new List<CultureInfo> { CultureInfo.GetCultureInfo("en-US"), CultureInfo.GetCultureInfo("es-ES") };
-
-            foreach (var culture in cultures)
-            {
-                DateTime date;
-                foreach (var pattern in DatePatterns)
-                {
-                    if (DateTime.TryParseExact(dateText, pattern, culture, DateTimeStyles.AllowWhiteSpaces, out date))
-                    {
-                        return date;
-                    }
-                }
-            }
-
-            return DefaultDate;
-        }
-
-        public static DateTime ChangeYear(this DateTime dt, int newYear)
-        {
-            return dt.AddYears(newYear - dt.Year);
-        }
     }
 }
 

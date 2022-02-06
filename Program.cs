@@ -43,7 +43,7 @@ namespace FileEditor
                 }
             }
 
-            Console.WriteLine(filesRenamed +  " files renamed.");
+            Console.WriteLine(filesRenamed + " files renamed.");
             Environment.Exit(0);
         }
 
@@ -52,7 +52,6 @@ namespace FileEditor
             try
             {
                 DateTime? date = null;
-                var isVideo = Utils.IsVideoFile(file.FullName);
 
                 try
                 {
@@ -60,27 +59,30 @@ namespace FileEditor
                 }
                 catch (Exception) { }
 
-                if (!date.HasValue || date.Value.Equals(Utils.DefaultDate))
+                if (!date.HasValue || date.Value.Equals(default(DateTime)))
                 {
                     // Fallback to lastWrite time
                     var lastWrite = file.LastWriteTime;
-                    var folderDate = Utils.GetDefaultTimeFromFolder(file);
 
                     if (lastWrite.Year != DateTime.Now.Year) // First fallback, last write time not in this year
                     {
                         date = lastWrite;
                     }
-                    else if (folderDate.Year != 1) // Second fallback, folder with a 4 digits name = year
-                    {
-                        date = folderDate;
-                    }
                     else
                     {
-                        date = lastWrite; // Last fallback, last write time
+                        var folderDate = Utils.GetDefaultTimeFromFolder(file);
+                        if (folderDate.Year != 1) // Second fallback, folder with a 4 digits name = year
+                        {
+                            date = folderDate;
+                        }
+                        else
+                        {
+                            date = lastWrite; // Last fallback, last write time
+                        }
                     }
                 }
 
-                if (date.HasValue) Utils.Rename(file, date.Value, isVideo: isVideo);
+                if (date.HasValue) Utils.Rename(file, date.Value);
             }
             catch (Exception e)
             {
