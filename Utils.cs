@@ -38,7 +38,7 @@ namespace FileEditor
         internal static DateTime GetDefaultTimeFromFolder(FileInfo file)
         {
             var parentFolder = System.IO.Directory.GetParent(file.FullName);
-            while (parentFolder!=null)
+            while (parentFolder != null)
             {
                 var folderName = parentFolder.Name;
                 int folderYear;
@@ -49,7 +49,7 @@ namespace FileEditor
 
                 parentFolder = parentFolder.Parent;
             }
-            
+
             return default(DateTime);
         }
 
@@ -148,25 +148,21 @@ namespace FileEditor
 
         internal static DateTime? GetDateWithoutTags(FileInfo file)
         {
-            DateTime? date = null;
-            // Fallback to lastWrite time
             var lastWrite = file.LastWriteTime;
+            var folderDate = GetDefaultTimeFromFolder(file);
 
-            if (lastWrite.Year != DateTime.Now.Year) // First fallback, last write time not in this year
+            DateTime? date;
+            if (lastWrite.Year == folderDate.Year) // Last write and ordered in right folder already: use lastWrite that has day and month info (photos sent in whatsapp )
             {
                 date = lastWrite;
             }
+            else if (folderDate != default)
+            {
+                date = folderDate; // If last write cannot does not match the year folder, year folder wins (old photos that have no or wrong metadata and were created recently but are ordered by folder year)
+            }
             else
             {
-                var folderDate = Utils.GetDefaultTimeFromFolder(file);
-                if (folderDate.Year != 1) // Second fallback, folder with a 4 digits name = year
-                {
-                    date = folderDate;
-                }
-                else
-                {
-                    date = lastWrite; // Last fallback, last write time
-                }
+                date = default(DateTime); // Last fallback, there is no metadata and no folder year available. Date cannot be calculated. (otherwise old photos get the current date as last write is then they are copied)
             }
 
             return date;
@@ -176,7 +172,7 @@ namespace FileEditor
         {
             return -1 != Array.IndexOf(MediaExtensions, Path.GetExtension(path).ToUpperInvariant());
         }
-        
+
         private static DateTime ParseDateTime(string dateText)
         {
             if (string.IsNullOrEmpty(dateText))
